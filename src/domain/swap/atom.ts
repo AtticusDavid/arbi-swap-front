@@ -108,9 +108,11 @@ export const useCurrency = () => {
   const currencyInUSDC = currencyLoadable.state === 'hasData' ? currencyLoadable.data : undefined;
 
 
+  const wrappedEvmosAddress = '0xd4949664cd82660aae99bedc034a0dea8a0bd517';
+  const evmosAddress = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
 
   const getPriceInUSDC = (tokenAddr: string) => {
-    return tokenPriceList && (tokenPriceList.find(x => x.tokenAddress === tokenAddr)?.priceUsdc ?? 0)
+    return tokenPriceList && (tokenPriceList.find(x => tokenAddr === wrappedEvmosAddress? x.tokenAddress === evmosAddress : x.tokenAddress === tokenAddr)?.priceUsdc ?? 0)
   }
 
   const getPriceInCurrency = (tokenAddr: string) => {
