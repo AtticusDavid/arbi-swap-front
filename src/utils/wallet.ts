@@ -21,14 +21,7 @@ export interface Wallet {
 //   chainId: '0x3', // Used to prevent transaction reuse across blockchains. Auto-filled by MetaMask.
 // };
 
-export interface TransactionParams {
-  gasPrice?: string;
-  gas: string;
-  to: string;
-  from: string;
-  value: string;
-  data: string;
-}
+export type TransactionParams = Record<string, string>;
 
 export interface WalletExtension {
   connect: () => Promise<Wallet | undefined>;

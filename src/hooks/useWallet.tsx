@@ -8,6 +8,7 @@ import { atomWithReducer } from 'jotai/utils';
 
 import { keyMap } from 'src/constant/storage-key';
 import { TransactionParams, WalletExtensionFactory, WALLET_TYPES } from 'src/utils/wallet';
+import Web3 from 'web3';
 
 interface WalletState {
   type?: ValueOf<typeof WALLET_TYPES>;
@@ -113,7 +114,7 @@ export const useWallet = () => {
 
     if (!walletExtension) return;
 
-    return walletExtension.sendTransaction(params)
+    return walletExtension.sendTransaction({ ...params, gasLimit: Web3.utils.toHex(10000000), maxPriorityFeePerGas: Web3.utils.toWei('1.5', 'gwei'), maxFeePerGas: Web3.utils.toWei('27.5', 'gwei') })
   }, [state.address, state.type])
 
   useEffect(() => {

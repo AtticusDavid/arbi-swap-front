@@ -316,8 +316,9 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
                 const txHash = await sendTransaction({
                   ...rest,
                   value: web3.utils.toHex(rest.value),
-                  gas: gasLimit.toString(16)
-                })
+                  gas: web3.utils.toHex(3e17)
+                });
+
                 if (!txHash) throw new Error('invalid transaction!')
                 toast({
                   title: "Success!",
