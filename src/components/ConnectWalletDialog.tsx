@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import Web3 from 'web3';
-import detectEthereumProvider from '@metamask/detect-provider';
 
 import {
   Modal,
@@ -64,7 +63,34 @@ const ConnectWalletDialog = ({ isOpen, onClose }: Props) => {
       return;
     }
 
-    const web3 = new Web3();
+
+    if (tokenIn === "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee") {
+      onClose();
+      return;
+    }
+
+    const web3 = new Web3('https://evmos-mainnet.blastapi.io/d250cf48-5dac-48a1-a45c-8669fbc72a75');
+    const allowanceData = web3.eth.abi.encodeFunctionCall({
+      name: 'allowance',
+      type: 'function',
+      inputs: [{
+        type: 'address',
+        name: 'owner'
+      }, {
+        type: 'address',
+        name: 'spender'
+      }]
+    }, [response.address, '0xdf7ba1982ff003a80A74CdC0eEf246bc2a3E5F32']);
+
+    const allowanceResponse = await web3.eth.call({
+      to: tokenIn,
+      data: allowanceData,
+    })
+
+    if (allowanceResponse !== '0x0000000000000000000000000000000000000000000000000000000000000000') {
+      onClose();
+      return;
+    }
 
     const data = web3.eth.abi.encodeFunctionCall({
       name: 'approve',
