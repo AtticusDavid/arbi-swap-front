@@ -11,6 +11,8 @@ import { useAtom, useAtomValue } from 'jotai';
 import { useAtomCallback, useHydrateAtoms } from 'jotai/utils';
 import { DefaultSeo } from 'next-seo';
 
+import web3 from 'web3';
+
 import { fetchQuote } from 'src/api/quote';
 import SlippageInput from 'src/components/SlippageInput';
 import SwapPreviewResult from 'src/components/SwapPreviewResult';
