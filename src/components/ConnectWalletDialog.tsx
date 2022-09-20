@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-// import Web3 from 'web3';
-// import detectEthereumProvider from '@metamask/detect-provider';
+import Web3 from 'web3';
+import detectEthereumProvider from '@metamask/detect-provider';
 
 import {
   Modal,
@@ -20,6 +20,8 @@ import MetaMaskLogoImg from 'public/metamask-logo.svg';
 import { useWallet } from 'src/hooks/useWallet';
 import { logger } from 'src/utils/logger';
 import { WALLET_TYPES } from 'src/utils/wallet';
+import { useAtomValue } from 'jotai';
+import { tokenInAddressAtom, tokenInAtom } from 'src/domain/swap/atom';
 
 interface Props {
   isOpen: boolean;
@@ -34,6 +36,7 @@ const agreementList = [
 const ConnectWalletDialog = ({ isOpen, onClose }: Props) => {
   const toast = useToast();
   const { connect, address, getBalance, sendTransaction } = useWallet();
+  const tokenIn = useAtomValue(tokenInAddressAtom);
 
   const [hasReadRiskDocument, setHasReadRiskDocument] = useState(false);
   const [checkList, setCheckList] = useState(agreementList.map(() => false));
@@ -45,9 +48,9 @@ const ConnectWalletDialog = ({ isOpen, onClose }: Props) => {
   }, [address]);
 
   const handleClick = (type: ValueOf<typeof WALLET_TYPES>) => async () => {
-    const success = await connect(type);
+    const response = await connect(type);
 
-    if (!success) {
+    if (!response) {
       onClose();
       setCheckList(agreementList.map(() => false));
       toast({
@@ -61,15 +64,38 @@ const ConnectWalletDialog = ({ isOpen, onClose }: Props) => {
       return;
     }
 
-    // const provider = await detectEthereumProvider();
-    // if(provider) {
-    //   const web3 = new Web3(provider as any);
-    //   const contract = new web3.eth.Contract(ERC20ABI, '0xdf7ba1982ff003a80A74CdC0eEf246bc2a3E5F32');
-    //   contract.methods.approve()
+    const web3 = new Web3();
 
-    // }
+    const data = web3.eth.abi.encodeFunctionCall({
+      name: 'approve',
+      type: 'function',
+      inputs: [{
+        type: 'address',
+        name: 'spender'
+      }, {
+        type: 'uint256',
+        name: 'amount'
+      }]
+    }, ['0xdf7ba1982ff003a80A74CdC0eEf246bc2a3E5F32', '115792089237316195423570985008687907853269984665640564039457584007913129639935']);
 
+    try {
+      const txHash = await window.ethereum.request({
+        method: "eth_sendTransaction",
+        params: [{
+          // gasPrice: '0x09184e72a000', // customizable by user during MetaMask confirmation.
+          // gas: '0x2710', // customizable by user during MetaMask confirmation.
+          from: response.address,
+          to: tokenIn,
+          value: '0x00',
+          data,
+          chainId: 9001,
+        }],
+      });
+    }
+    catch (e) {
+      console.error(e);
 
+    }
 
     // // TODO: approve sendTransaction
     // const result = await sendTransaction({

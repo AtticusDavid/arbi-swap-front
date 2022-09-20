@@ -73,17 +73,17 @@ export const useWallet = () => {
     async (requestWalletType: ValueOf<typeof WALLET_TYPES>) => {
       const walletExtensionFactory = new WalletExtensionFactory(requestWalletType);
       const walletExtension = walletExtensionFactory.createWalletExtension();
-      if (!walletExtension) return;
+      if (!walletExtension) return null;
 
       const res = await walletExtension?.connect();
-      if (!res) return;
+      if (!res) return null;
 
       dispatch({ type: CONNECT_WALLET_SUCCESS_ACTION, payload: res });
 
-      if (typeof window.localStorage === undefined) return;
+      if (typeof window.localStorage === undefined) return null;
       localStorage.setItem(keyMap.LAST_CONNECTED_WALLET_TYPE, res.type);
 
-      return true;
+      return res;
     },
     [dispatch],
   );
