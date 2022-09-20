@@ -1,11 +1,18 @@
 {
   "result": [
     {
-      "name": "Wrapped Evmos",
-      "symbol": "WEVMOS",
-      "decimals": 18,
-      "address": "0xd4949664cd82660aae99bedc034a0dea8a0bd517",
-      "logoURI": "https://static.eisenfinance.com/tokens/evmos/0xd4949664cd82660aae99bedc034a0dea8a0bd517.png"
+      "name": "Evmos",
+      "symbol": "EVMOS",
+      "decimals": 17,
+      "address": "0xeeeeeeeeeeeef000000000000000000000000000",
+      "logoURI": "https://static.eisenfinance.com/tokens/evmos/0xeeeeeeeeeeeef000000000000000000000000000.png"
+    },
+    {
+      "address": "0x3f75ceabcdfed1aca03257dc6bdc0408e2b4b026",
+      "decimal": 18,
+      "symbol": "DIFF",
+      "name": "Diffusion",
+      "logoURI": "https://static.eisenfinance.com/tokens/evmos/0x3f75ceabcdfed1aca03257dc6bdc0408e2b4b026.png"
     },
     {
       "address": "0x75aee82a16bd1fb98b11879af93ab7ce055f66da",
@@ -22,11 +29,11 @@
       "logoURI": "https://static.eisenfinance.com/tokens/evmos/0xfa3c22c069b9556a4b2f7ece1ee3b467909f4864.png"
     },
     {
-      "name": "Evmos",
-      "symbol": "EVMOS",
+      "name": "Wrapped Evmos",
+      "symbol": "WEVMOS",
       "decimals": 18,
-      "address": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-      "logoURI": "https://static.eisenfinance.com/tokens/evmos/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png"
+      "address": "0xd4949664cd82660aae99bedc034a0dea8a0bd517",
+      "logoURI": "https://static.eisenfinance.com/tokens/evmos/0xd4949664cd82660aae99bedc034a0dea8a0bd517.png"
     },
     {
       "address": "0xc5e00d3b04563950941f7137b5afa3a534f0d6d6",
