@@ -3,13 +3,13 @@
     {
       "name": "Evmos",
       "symbol": "EVMOS",
-      "decimals": 17,
-      "address": "0xeeeeeeeeeeeef000000000000000000000000000",
-      "logoURI": "https://static.eisenfinance.com/tokens/evmos/0xeeeeeeeeeeeef000000000000000000000000000.png"
+      "decimals": 18,
+      "address": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "logoURI": "https://static.eisenfinance.com/tokens/evmos/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png"
     },
     {
       "address": "0x3f75ceabcdfed1aca03257dc6bdc0408e2b4b026",
-      "decimal": 18,
+      "decimals": 18,
       "symbol": "DIFF",
       "name": "Diffusion",
       "logoURI": "https://static.eisenfinance.com/tokens/evmos/0x3f75ceabcdfed1aca03257dc6bdc0408e2b4b026.png"

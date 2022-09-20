@@ -258,6 +258,7 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
               try {
                 const txHash = await sendTransaction({
                   ...rest,
+                  value: web3.utils.toHex(rest.value),
                   gas: gasLimit.toString(16)
                 })
                 if (!txHash) throw new Error('invalid transaction!')

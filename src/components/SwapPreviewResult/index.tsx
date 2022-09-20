@@ -86,7 +86,7 @@ const SwapPreviewResult = ({
             startColor="blueGray.200"
             endColor="blueGray.400">
             <Text fontSize={['sm', 'md', 'md', 'md']} color={priceImpact && priceImpact > 5 ? 'red' : undefined}>
-              {priceImpact && priceImpact > 1 ? withComma(priceImpact, 1) : '< 1'}
+              {priceImpact && priceImpact > 1 && isFinite(priceImpact) ? withComma(priceImpact, 1) : '< 1'}
               %
             </Text>
           </SkeletonText>
