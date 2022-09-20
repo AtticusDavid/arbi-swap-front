@@ -10,7 +10,6 @@ import Decimal from 'decimal.js';
 import { useAtom, useAtomValue } from 'jotai';
 import { useAtomCallback, useHydrateAtoms } from 'jotai/utils';
 import { DefaultSeo } from 'next-seo';
-
 import web3 from 'web3';
 
 import { fetchQuote } from 'src/api/quote';
