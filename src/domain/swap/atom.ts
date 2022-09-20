@@ -89,7 +89,7 @@ export const getTokenOutDenomAtom = atom<(amount: string) => number>(
   }
 )
 
-export const tokenInAmountAtom = atom<number | undefined>(undefined);
+export const tokenInAmountAtom = atom<string | undefined>(undefined);
 
 export const slippageRatioAtom = atom<number>(1);
 

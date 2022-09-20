@@ -64,15 +64,24 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
     // remove every charactor except dot and digits from e.target.value
-    const value = e.target.value.replace(/[^\d\.]/g, '');
-    const [integer, fraction] = value.split('.');
-    if (integer && integer.length > 10) {
-      return;
+    try {
+      const inputValue = e.target.value.replace(/[^\d\.]/g, '')
+      const value = new Decimal(inputValue);
+      const integer = String(value.trunc());
+      const fraction = value.minus(integer).toFixed();
+
+      if (integer && value.e > 9) {
+        return;
+      }
+      if (fraction && fraction.length > 5) {
+        return;
+      }
+      setTokenInAmount(inputValue);
     }
-    if (fraction && fraction.length > 5) {
-      return;
+    catch (e) {
+
     }
-    setTokenInAmount(value ? parseFloat(value) : undefined);
+
   };
 
   const [slippageRatio, setSlippageRatio] = useAtom(slippageRatioAtom);
@@ -97,7 +106,7 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
           tokenInAddr: selectedTokenIn.address,
           tokenOutAddr: selectedTokenOut.address,
           from: address!,
-          amount: new Decimal((tokenInAmount * Math.pow(10, selectedTokenIn?.decimals)).toString()).toFixed(),
+          amount: new Decimal(tokenInAmount).mul(Math.pow(10, selectedTokenIn?.decimals)).toFixed(),
           slippageBps: slippageRatio * 100,
           /**
            * constant
@@ -127,7 +136,7 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
 
       set(tokenInAddressAtom, tokenOutAddress);
       set(tokenOutAddressAtom, tokenInAddress);
-      set(tokenInAmountAtom, 0);
+      set(tokenInAmountAtom, '0');
     }, []),
   );
 
@@ -281,7 +290,7 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
         {previewResult && debouncedTokenInAmount ? (
           <SwapPreviewResult
             previewResult={previewResult}
-            expectedInputAmount={debouncedTokenInAmount}
+            expectedInputAmount={Number(debouncedTokenInAmount)}
             expectedOutputAmount={tokenOutAmount}
             isLoaded={!isLoading && !isRefetching}
           />

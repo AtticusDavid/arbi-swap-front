@@ -106,14 +106,14 @@ const TokenAmountInput = ({
         <FormControl isInvalid={isInvalid}>
           <InputGroup size="lg" minWidth="160px">
             <Input
-              value={withComma(amount, isReadOnly ? 3 : 0)}
+              value={isReadOnly? withComma(amount, 3) : amount}
               onChange={handleChange}
               isReadOnly={isReadOnly}
               readOnly={isReadOnly}
               id="amount"
               // type="number"
               placeholder="0"
-              inputMode="numeric"
+              // inputMode="numeric"
               maxLength={29}
               focusBorderColor="secondary.200"
               onWheel={e => (e.target as HTMLInputElement).blur()}

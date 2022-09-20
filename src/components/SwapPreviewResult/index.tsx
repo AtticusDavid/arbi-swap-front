@@ -56,7 +56,7 @@ const SwapPreviewResult = ({
   const { getPriceInUSDC } = useCurrency();
 
   const priceImpact = tokenInAmount && tokenOut && tokenIn && getPriceInUSDC(tokenOut.address) && getPriceInUSDC(tokenIn.address) && calculatePriceImpact({
-    inputTokenAmount: tokenInAmount,
+    inputTokenAmount: Number(tokenInAmount),
     inputTokenPriceInUSDT: getPriceInUSDC(tokenIn.address)!,
     outputTokenPriceInUSDT: getPriceInUSDC(tokenOut.address)!,
     outputTokenAmountBeforeFeeDeducted: expectedOutputAmount,
