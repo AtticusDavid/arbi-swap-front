@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import Web3 from 'web3';
 
 import {
   Modal,
@@ -13,14 +12,17 @@ import {
   useToast,
   Box,
 } from '@chakra-ui/react';
+import { useAtomValue } from 'jotai';
 import Image from 'next/image';
+import Web3 from 'web3';
+
 
 import MetaMaskLogoImg from 'public/metamask-logo.svg';
+import { tokenInAddressAtom } from 'src/domain/swap/atom';
 import { useWallet } from 'src/hooks/useWallet';
 import { logger } from 'src/utils/logger';
 import { WALLET_TYPES } from 'src/utils/wallet';
-import { useAtomValue } from 'jotai';
-import { tokenInAddressAtom, tokenInAtom } from 'src/domain/swap/atom';
+
 
 interface Props {
   isOpen: boolean;
@@ -119,7 +121,6 @@ const ConnectWalletDialog = ({ isOpen, onClose }: Props) => {
       });
     }
     catch (e) {
-      console.error(e);
 
     }
 
