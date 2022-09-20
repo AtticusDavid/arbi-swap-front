@@ -243,7 +243,7 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
           <Box w="100%" h={12} />
 
           <Button
-            isDisabled={!address || !data?.metamaskSwapTransaction}
+            isDisabled={!address || !data?.metamaskSwapTransaction || pageMode === 'flash'}
             w="100%"
             size="lg"
             height={['48px', '54px', '54px', '64px']}
