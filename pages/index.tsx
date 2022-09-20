@@ -10,7 +10,7 @@ import Decimal from 'decimal.js';
 import { useAtom, useAtomValue } from 'jotai';
 import { useAtomCallback, useHydrateAtoms } from 'jotai/utils';
 import { DefaultSeo } from 'next-seo';
-import web3 from 'web3';
+import Web3 from 'web3';
 
 import { fetchQuote } from 'src/api/quote';
 import SlippageInput from 'src/components/SlippageInput';
@@ -253,8 +253,64 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
             colorScheme="primary"
             onClick={async () => {
               logger.debug(data?.metamaskSwapTransaction)
-              if (!data?.metamaskSwapTransaction) return;
+              if (!data?.metamaskSwapTransaction || !address) return;
               const { gasLimit, ...rest } = data.metamaskSwapTransaction;
+
+              const web3 = new Web3('https://evmos-mainnet.blastapi.io/d250cf48-5dac-48a1-a45c-8669fbc72a75');
+              const allowanceData = web3.eth.abi.encodeFunctionCall({
+                name: 'allowance',
+                type: 'function',
+                inputs: [{
+                  type: 'address',
+                  name: 'owner'
+                }, {
+                  type: 'address',
+                  name: 'spender'
+                }]
+              }, [address, '0xdf7ba1982ff003a80A74CdC0eEf246bc2a3E5F32']);
+
+              const allowanceResponse = await web3.eth.call({
+                to: tokenInAddress,
+                data: allowanceData,
+              })
+
+              if (allowanceResponse === '0x0000000000000000000000000000000000000000000000000000000000000000') {
+                const approveData = web3.eth.abi.encodeFunctionCall({
+                  name: 'approve',
+                  type: 'function',
+                  inputs: [{
+                    type: 'address',
+                    name: 'spender'
+                  }, {
+                    type: 'uint256',
+                    name: 'amount'
+                  }]
+                }, ['0xdf7ba1982ff003a80A74CdC0eEf246bc2a3E5F32', '115792089237316195423570985008687907853269984665640564039457584007913129639935']);
+
+                try {
+                  const txHash = await window.ethereum.request({
+                    method: "eth_sendTransaction",
+                    params: [{
+                      from: address,
+                      to: tokenInAddress,
+                      value: '0x00',
+                      data: approveData,
+                      chainId: 9001,
+                    }],
+                  });
+                }
+                catch (e) {
+                  toast({
+                    title: 'Failed to send transaction',
+                    description: 'Need to approve first!',
+                    status: 'error',
+                    position: 'top-right',
+                    duration: 5000,
+                    isClosable: true,
+                  });
+                  return;
+                }
+              }
 
               try {
                 const txHash = await sendTransaction({
