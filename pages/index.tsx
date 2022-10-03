@@ -25,6 +25,7 @@ import {
   slippageRatioAtom,
   tokenInAddressAtom,
   tokenInAmountAtom,
+  tokenInAmountStringAtom,
   tokenInAtom,
   tokenOutAddressAtom,
   tokenOutAtom,
@@ -33,7 +34,7 @@ import { useDebounce } from 'src/hooks/useDebounce';
 import { useWallet } from 'src/hooks/useWallet';
 import { QuoteResponseDto } from 'src/types';
 import { logger } from 'src/utils/logger';
-import withComma from 'src/utils/with-comma';
+import { removeDotExceptFirstOne } from 'src/utils/with-comma';
 import { IERC20__factory } from 'types/ethers-contracts/factories';
 
 import seoConfig from '../next-seo.config';
@@ -60,28 +61,21 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
   const selectedTokenIn = useAtomValue(tokenInAtom);
   const selectedTokenOut = useAtomValue(tokenOutAtom);
 
-  const [tokenInAmount, setTokenInAmount] = useAtom(tokenInAmountAtom);
+  const [tokenInAmountString, setTokenInAmountString] = useAtom(tokenInAmountStringAtom);
+  const tokenInAmount = useAtomValue(tokenInAmountAtom);
+
 
   const [pageMode, setPageMode] = useAtom(pageModeAtom);
 
   const debouncedTokenInAmount = useDebounce(tokenInAmount, 200);
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
-    // remove every charactor except dot and digits from e.target.value
-    try {
-      const inputValue = e.target.value.replace(/[^\d\.]/g, '')
-      const value = new Decimal(inputValue);
-      const integer = String(value.trunc());
-
-      if (integer && value.e > 9) {
-        return;
-      }
-      setTokenInAmount(inputValue);
+    const value = e.target.value;
+    const [integer] = value.split('.');
+    if (integer && integer.length > 10) {
+      return;
     }
-    catch (e) {
-
-    }
-
+    setTokenInAmountString(removeDotExceptFirstOne(value));
   };
 
   const [slippageRatio, setSlippageRatio] = useAtom(slippageRatioAtom);
@@ -136,7 +130,7 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
 
       set(tokenInAddressAtom, tokenOutAddress);
       set(tokenOutAddressAtom, tokenInAddress);
-      set(tokenInAmountAtom, '0');
+      set(tokenInAmountStringAtom, '0');
     }, []),
   );
 
@@ -210,7 +204,7 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
 
           <TokenAmountInput
             tokenAddressAtom={tokenInAddressAtom}
-            amount={tokenInAmount}
+            amount={tokenInAmountString}
             handleChange={handleChange}
             modalHeaderTitle="You Sell"
             label="You Sell"
@@ -231,7 +225,7 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
 
           <TokenAmountInput
             tokenAddressAtom={tokenOutAddressAtom}
-            amount={withComma(tokenOutAmount, 3)}
+            amount={tokenOutAmount}
             isReadOnly
             modalHeaderTitle="You Buy"
             label="You Buy"

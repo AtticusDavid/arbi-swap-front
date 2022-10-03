@@ -6,6 +6,7 @@ import { atomFamily, loadable } from 'jotai/utils';
 import { FetchBalanceResponseDto } from 'src/api/token';
 import axiosInstance from 'src/config/axios';
 import { wallStateAtom } from 'src/hooks/useWallet';
+import { filterDecimal, removeDotExceptFirstOne } from 'src/utils/with-comma';
 import { IERC20__factory } from 'types/ethers-contracts';
 
 import { tokenListAtom } from '../chain/atom';
@@ -131,7 +132,13 @@ export const getTokenOutDenomAtom = atom<(amount: string) => number>(
   }
 )
 
-export const tokenInAmountAtom = atom<string | undefined>(undefined);
+export const tokenInAmountStringAtom = atom<string>('');
+
+export const tokenInAmountAtom = atom<number>(
+  (get) => {
+    return parseFloat(removeDotExceptFirstOne(filterDecimal(get(tokenInAmountStringAtom))));
+  }
+)
 
 export const slippageRatioAtom = atom<number>(1);
 
