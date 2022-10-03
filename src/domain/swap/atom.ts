@@ -18,18 +18,14 @@ export const pageModeAtom = atom<'swap' | 'flash'>('swap');
 export const tokenInAddressAtom = atom<string | undefined>(undefined);
 
 export const balanceAtom = atomWithQuery(get=>({
-  queryKey: ['balance', get(tokenInAddressAtom)],
+  queryKey: ['balance', get(tokenInAddressAtom), get(wallStateAtom)],
   queryFn: async ({queryKey}) => {
-
-    // if(!window) return null;
     const [_, tokenInAddress] = queryKey;
 
     if(!tokenInAddress) {
       return BigNumber.from(0);
     }
     return getBalanceFromAddress(tokenInAddress as string);
-
-
   }
 }))
 
