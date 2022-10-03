@@ -51,7 +51,9 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
     [tokenOutAddressAtom, defaultTokenList[1].address] as const,
   ]);
 
+
   const tokenInAddress = useAtomValue(tokenInAddressAtom);
+ 
   const { address, sendTransaction } = useWallet();
   const toast = useToast();
 
@@ -217,6 +219,7 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
             modalHeaderTitle="You Sell"
             label="You Sell"
             isInvalid={isError}
+            showBalance
           />
 
           <Flex alignItems="center" marginY={8}>

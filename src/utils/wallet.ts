@@ -1,3 +1,5 @@
+import { ethers } from 'ethers';
+
 import { logger } from './logger';
 
 export const WALLET_TYPES = {
@@ -42,17 +44,55 @@ export class WalletExtensionFactory {
     return new Metamask();
   }
 }
+
+type MetaMaskError = {
+  code: number;
+}
+function isMetaMaskError(error: unknown): error is MetaMaskError {
+  return !!(typeof error === 'object' && error && 'code' in error);
+}
+
 export class Metamask implements WalletExtension {
   async connect() {
     if (typeof window.ethereum === undefined) return;
     try {
+
+      try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: ethers.utils.hexlify(9001) }],
+        });
+      } catch (switchError) {
+        // This error code indicates that the chain has not been added to MetaMask.
+        if (isMetaMaskError(switchError) && switchError.code === 4902) {
+          try {
+            await window.ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [
+                {
+                  chainId: ethers.utils.hexlify(9001),
+                  chainName: 'EVMOS Mainnet', // EVMOS Mainnet
+                  rpcUrls: ['https://eth.bd.evmos.org:8545'],
+                },
+              ],
+            });
+          } catch (addError) {
+            // handle "add" error
+          }
+        }
+        // handle other "switch" errors
+      }
+
       const res = await window.ethereum.request<string[]>({
         method: 'eth_requestAccounts',
+        // method: 'wallet_switchEthereumChain',
       });
 
       if (!res) return;
       if (!Array.isArray(res) || res.length === 0) return;
       if (!res[0]) return;
+
+
 
       return {
         type: WALLET_TYPES.METAMASK,
