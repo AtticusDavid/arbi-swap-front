@@ -22,11 +22,11 @@ function withComma(value?: number | string, fixNumber?: number): string {
     if (value === undefined || value === '') return '';
     if(typeof value === 'number' && isNaN(value)) return '';
   
-    const decimal = new Decimal(typeof value === 'string' ? removeDotExceptFirstOne(filterDecimal(value)): value);
+    const input = typeof value === 'string' ? removeDotExceptFirstOne(filterDecimal(value)): value
+    const decimal = new Decimal(input);
     // 0보다 작은 경우 유효숫자의 개수가 fixNumber만큼 노출되도록 수정
   
-    const fixed = fixNumber ? fixNumber + Math.max(0, -decimal.e-1) : undefined;
-  
+    const fixed = fixNumber === undefined ? undefined : (fixNumber && decimal.e < 0) ? fixNumber + Math.min(0, -decimal.e-1) : fixNumber;
     // 정수부
     const intPart = +new Decimal(decimal).trunc();
     // 소수부

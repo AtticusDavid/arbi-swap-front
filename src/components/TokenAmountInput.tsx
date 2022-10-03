@@ -17,7 +17,7 @@ import {
   HStack,
 } from '@chakra-ui/react';
 import { ethers } from 'ethers';
-import { PrimitiveAtom, useAtom, useAtomValue } from 'jotai';
+import { PrimitiveAtom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { loadable } from 'jotai/utils';
 
 import { tokenListAtom } from 'src/domain/chain/atom';
@@ -25,6 +25,7 @@ import { Token } from 'src/domain/chain/types';
 import {
   balanceAtom,
   tokenInAddressAtom,
+  tokenInAmountStringAtom,
   tokenInAtom,
   tokenOutAddressAtom,
   useCurrency,
@@ -71,6 +72,21 @@ const TokenAmountInput = ({
 
   const tokenPriceInCurrency = selectedTokenAddress ? getPriceInCurrency(selectedTokenAddress) : undefined;
   const priceInCurrency = tokenPriceInCurrency ? withComma(tokenPriceInCurrency * Number(amount), 2) : undefined;
+  const setTokenInAmountString = useSetAtom(tokenInAmountStringAtom);
+
+  const fillInputWithBalance = () => {
+    if (balance.state === 'hasData') setTokenInAmountString(ethers.utils.formatUnits(balance.data, tokenIn?.decimals));
+  }
+
+  const displayValue = (()=>{
+    if(isReadOnly) return withComma(amount, 3);
+    const output = withComma(amount);
+    const dot = output.split('.');
+    if(dot.length > 1 && dot[1].length > 3) {
+      return dot[0]+'.'+dot[1].slice(0,3);
+    }
+    return output;
+  })()
 
   return (
     <>
@@ -83,7 +99,14 @@ const TokenAmountInput = ({
       />
 
       <Heading as="h3" size="md">
-        {label}
+        <HStack justifyContent={showBalance ? "space-between" : "flex-start"}>
+          <Text>
+            {label}
+          </Text>
+          {showBalance &&
+            <Button size="sm" onClick={fillInputWithBalance}>max</Button>
+          }
+        </HStack>
       </Heading>
       <Stack
         marginTop={4}
@@ -113,7 +136,7 @@ const TokenAmountInput = ({
         <FormControl isInvalid={isInvalid}>
           <InputGroup size="lg" minWidth="160px">
             <Input
-              value={isReadOnly ? withComma(amount, 3) : amount}
+              value={displayValue}
               onChange={handleChange}
               isReadOnly={isReadOnly}
               readOnly={isReadOnly}
@@ -125,7 +148,7 @@ const TokenAmountInput = ({
               focusBorderColor="secondary.200"
               onWheel={e => (e.target as HTMLInputElement).blur()}
             />
-            <InputRightElement marginRight={4}>
+            <InputRightElement paddingRight={4} backgroundColor="blueGray">
               <Box paddingX={4}>
                 <Text textAlign="center" fontSize={['sm', 'md', 'md', 'md']}>
                   {selectedToken?.symbol}
@@ -145,7 +168,10 @@ const TokenAmountInput = ({
         <HStack justifyContent={showBalance ? 'space-between' : 'flex-end'}>
           {showBalance &&
 
-            <Text color="blueGray.200">
+            <Text color="blueGray.200" onClick={() => {
+              fillInputWithBalance();
+              if (balance.state === 'hasData') setTokenInAmountString(ethers.utils.formatUnits(balance.data, tokenIn?.decimals));
+            }}>
               Balance: {balance.state === 'hasData' ? withComma(ethers.utils.formatUnits(balance.data, tokenIn?.decimals), 3) : '0'}
             </Text>
           }

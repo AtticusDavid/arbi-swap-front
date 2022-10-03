@@ -75,7 +75,7 @@ const ConnectWalletDialog = ({ isOpen, onClose }: Props) => {
     const signer = provider.getSigner();
 
     const erc20 = IERC20__factory.connect(tokenIn, signer);
-    const allowance = await erc20.allowance(response.address, '0xdf7ba1982ff003a80A74CdC0eEf246bc2a3E5F32');
+    const allowance = await erc20.allowance(response.address, '0xb0e950099c29a4e61c77f9185c5f5f76cd9d4393');
 
     if (allowance.gt(0)) {
       onClose();
@@ -83,7 +83,7 @@ const ConnectWalletDialog = ({ isOpen, onClose }: Props) => {
     }
 
     try {
-      const tx = await erc20.approve('0xdf7ba1982ff003a80A74CdC0eEf246bc2a3E5F32', ethers.constants.MaxUint256);
+      const tx = await erc20.approve('0xb0e950099c29a4e61c77f9185c5f5f76cd9d4393', ethers.constants.MaxUint256);
       const receipt = await tx.wait();
 
       if (receipt.status !== 1) {
