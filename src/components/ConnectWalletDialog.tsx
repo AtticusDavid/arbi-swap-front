@@ -12,16 +12,16 @@ import {
   useToast,
   Box,
 } from '@chakra-ui/react';
+import { ethers } from 'ethers';
 import { useAtomValue } from 'jotai';
 import Image from 'next/image';
-import Web3 from 'web3';
-
 
 import MetaMaskLogoImg from 'public/metamask-logo.svg';
 import { tokenInAddressAtom } from 'src/domain/swap/atom';
 import { useWallet } from 'src/hooks/useWallet';
 import { logger } from 'src/utils/logger';
 import { WALLET_TYPES } from 'src/utils/wallet';
+import { IERC20__factory } from 'types/ethers-contracts/factories';
 
 
 interface Props {
@@ -66,62 +66,30 @@ const ConnectWalletDialog = ({ isOpen, onClose }: Props) => {
     }
 
 
-    if (tokenIn === "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee") {
+    if (!tokenIn || tokenIn === "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee") {
       onClose();
       return;
     }
 
-    const web3 = new Web3('https://evmos-mainnet.blastapi.io/d250cf48-5dac-48a1-a45c-8669fbc72a75');
-    const allowanceData = web3.eth.abi.encodeFunctionCall({
-      name: 'allowance',
-      type: 'function',
-      inputs: [{
-        type: 'address',
-        name: 'owner'
-      }, {
-        type: 'address',
-        name: 'spender'
-      }]
-    }, [response.address, '0xdf7ba1982ff003a80A74CdC0eEf246bc2a3E5F32']);
+    const provider = new ethers.providers.Web3Provider(window.ethereum as unknown as ethers.providers.ExternalProvider);
+    const signer = provider.getSigner();
 
-    const allowanceResponse = await web3.eth.call({
-      to: tokenIn,
-      data: allowanceData,
-    })
+    const erc20 = IERC20__factory.connect(tokenIn, signer);
+    const allowance = await erc20.allowance(response.address, '0xdf7ba1982ff003a80A74CdC0eEf246bc2a3E5F32');
 
-    if (allowanceResponse !== '0x0000000000000000000000000000000000000000000000000000000000000000') {
+    if (allowance.gt(0)) {
       onClose();
       return;
     }
-
-    const data = web3.eth.abi.encodeFunctionCall({
-      name: 'approve',
-      type: 'function',
-      inputs: [{
-        type: 'address',
-        name: 'spender'
-      }, {
-        type: 'uint256',
-        name: 'amount'
-      }]
-    }, ['0xdf7ba1982ff003a80A74CdC0eEf246bc2a3E5F32', '115792089237316195423570985008687907853269984665640564039457584007913129639935']);
 
     try {
-      const txHash = await window.ethereum.request({
-        method: "eth_sendTransaction",
-        params: [{
-          // gasPrice: '0x09184e72a000', // customizable by user during MetaMask confirmation.
-          // gas: '0x2710', // customizable by user during MetaMask confirmation.
-          from: response.address,
-          to: tokenIn,
-          value: '0x00',
-          data,
-          chainId: 9001,
-        }],
-      });
-    }
-    catch (e) {
+      const tx = await erc20.approve('0xdf7ba1982ff003a80A74CdC0eEf246bc2a3E5F32', ethers.constants.MaxUint256);
+      const receipt = await tx.wait();
 
+      if (receipt.status !== 1) {
+        throw new Error("Approve failed");
+      }
+    } catch (e) {
     }
 
     // // TODO: approve sendTransaction

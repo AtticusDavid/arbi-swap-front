@@ -39,8 +39,7 @@
     "react-tsparticles": "^2.2.3",
     "react-virtual": "^2.10.4",
     "sharp": "^0.30.3",
-    "tsparticles": "^2.2.3",
-    "web3": "^1.8.0"
+    "tsparticles": "^2.2.3"
   },
   "devDependencies": {
     "@typechain/ethers-v5": "^10.1.0",
