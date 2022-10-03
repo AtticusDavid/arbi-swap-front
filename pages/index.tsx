@@ -72,12 +72,8 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
       const inputValue = e.target.value.replace(/[^\d\.]/g, '')
       const value = new Decimal(inputValue);
       const integer = String(value.trunc());
-      const fraction = value.minus(integer).toFixed();
 
       if (integer && value.e > 9) {
-        return;
-      }
-      if (fraction && fraction.length > 5) {
         return;
       }
       setTokenInAmount(inputValue);

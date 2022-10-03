@@ -4,7 +4,6 @@ import {
 } from 'react';
 
 import Decimal from 'decimal.js';
-import { BigNumber } from 'ethers';
 import { atom, useAtom } from 'jotai';
 import { atomWithReducer } from 'jotai/utils';
 
@@ -115,7 +114,7 @@ export const useWallet = () => {
 
     if (!walletExtension) return;
 
-    return walletExtension.sendTransaction({ ...params, gasLimit: BigNumber.from(10000000).toHexString(), maxPriorityFeePerGas: new Decimal('1.5e9').toHexadecimal(), maxFeePerGas: new Decimal('2.75e10').toHexadecimal() })
+    return walletExtension.sendTransaction({ ...params, maxPriorityFeePerGas: new Decimal('1.5e9').toHexadecimal(), maxFeePerGas: new Decimal('2.75e10').toHexadecimal() })
   }, [state.address, state.type])
 
   useEffect(() => {
