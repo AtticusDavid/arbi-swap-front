@@ -4,10 +4,11 @@ import {
 } from 'react';
 
 import Decimal from 'decimal.js';
-import { atom, useAtom } from 'jotai';
+import { atom, useAtom, useSetAtom } from 'jotai';
 import { atomWithReducer } from 'jotai/utils';
 
 import { keyMap } from 'src/constant/storage-key';
+import { balanceFetchKey } from 'src/domain/swap/atom';
 import { TransactionParams, WalletExtensionFactory, WALLET_TYPES } from 'src/utils/wallet';
 
 interface WalletState {
@@ -69,6 +70,7 @@ export const wallReducerAtom = atomWithReducer(initialWalletState, walletReducer
 
 export const useWallet = () => {
   const [state, dispatch] = useAtom(wallReducerAtom);
+  const updateFetchKey = useSetAtom(balanceFetchKey);
 
   const connect = useCallback(
     async (requestWalletType: ValueOf<typeof WALLET_TYPES>) => {
@@ -80,6 +82,7 @@ export const useWallet = () => {
       if (!res) return null;
 
       dispatch({ type: CONNECT_WALLET_SUCCESS_ACTION, payload: res });
+      updateFetchKey(+new Date());
 
       if (typeof window.localStorage === undefined) return null;
       localStorage.setItem(keyMap.LAST_CONNECTED_WALLET_TYPE, res.type);

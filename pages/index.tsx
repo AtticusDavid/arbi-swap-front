@@ -8,7 +8,7 @@ import { ArrowUpDownIcon, RepeatIcon } from '@chakra-ui/icons';
 import { Box, Divider, Flex, Heading, HStack, Button, IconButton, Tab, Tabs, TabList, useToast } from '@chakra-ui/react';
 import Decimal from 'decimal.js';
 import { BigNumber, ethers } from 'ethers';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useAtomCallback, useHydrateAtoms } from 'jotai/utils';
 import { DefaultSeo } from 'next-seo';
 
@@ -20,6 +20,7 @@ import { keyMap } from 'src/constant/storage-key';
 import { defaultTokenList } from 'src/domain/chain/atom';
 import { Token } from 'src/domain/chain/types';
 import {
+  balanceFetchKey,
   getTokenOutDenomAtom,
   pageModeAtom,
   slippageRatioAtom,
@@ -81,6 +82,7 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
   const [slippageRatio, setSlippageRatio] = useAtom(slippageRatioAtom);
 
   const getTokenOutDenom = useAtomValue(getTokenOutDenomAtom);
+  const updateFetchKey = useSetAtom(balanceFetchKey);
 
   const [previewResult, setPreviewResult] = useState<Omit<
     QuoteResponseDto,
@@ -209,7 +211,7 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
             modalHeaderTitle="You Sell"
             label="You Sell"
             isInvalid={isError}
-            showBalance
+            showBalance={!!address}
           />
 
           <Flex alignItems="center" marginY={8}>
@@ -286,7 +288,8 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
                 });
 
                 if (!txHash) throw new Error('invalid transaction!')
-                toast({
+
+                const toastId = toast({
                   title: "Success!",
                   description: `Your transaction has sent: ${txHash}`,
                   status: 'success',
@@ -294,6 +297,22 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
                   duration: 5000,
                   isClosable: true,
                 })
+
+                provider.getTransactionReceipt(txHash).then(receipt => {
+                  updateFetchKey(+new Date());
+                  if (receipt) { // success
+                    if(toastId) toast.close(toastId);
+                    toast({
+                      title: "Success!",
+                      description: `Your transaction(${txHash}) is approved!`,
+                      status: 'success',
+                      position: 'top-right',
+                      duration: 5000,
+                      isClosable: true,
+                    })
+                  } else { // fail
+                  }
+                });
                 logger.debug('txhash', txHash)
               }
               catch (e) {

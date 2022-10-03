@@ -17,8 +17,10 @@ import { Token } from '../chain/types';
 export const pageModeAtom = atom<'swap' | 'flash'>('swap');
 export const tokenInAddressAtom = atom<string | undefined>(undefined);
 
+
+export const balanceFetchKey = atom<number>(0);
 export const balanceAtom = atomWithQuery(get=>({
-  queryKey: ['balance', get(tokenInAddressAtom), get(wallStateAtom)],
+  queryKey: ['balance', get(tokenInAddressAtom), get(balanceFetchKey)],
   queryFn: async ({queryKey}) => {
     const [_, tokenInAddress] = queryKey;
 
