@@ -3,13 +3,13 @@ import {
   useEffect,
 } from 'react';
 
+import Decimal from 'decimal.js';
+import { BigNumber } from 'ethers';
 import { atom, useAtom } from 'jotai';
 import { atomWithReducer } from 'jotai/utils';
 
 import { keyMap } from 'src/constant/storage-key';
 import { TransactionParams, WalletExtensionFactory, WALLET_TYPES } from 'src/utils/wallet';
-import Web3 from 'web3';
-import Decimal from 'decimal.js';
 
 interface WalletState {
   type?: ValueOf<typeof WALLET_TYPES>;
@@ -115,7 +115,7 @@ export const useWallet = () => {
 
     if (!walletExtension) return;
 
-    return walletExtension.sendTransaction({ ...params, gasLimit: Web3.utils.toHex(10000000), maxPriorityFeePerGas: new Decimal('1.5e9').toHexadecimal(), maxFeePerGas: new Decimal('2.75e10').toHexadecimal() })
+    return walletExtension.sendTransaction({ ...params, gasLimit: BigNumber.from(10000000).toHexString(), maxPriorityFeePerGas: new Decimal('1.5e9').toHexadecimal(), maxFeePerGas: new Decimal('2.75e10').toHexadecimal() })
   }, [state.address, state.type])
 
   useEffect(() => {

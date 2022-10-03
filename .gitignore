@@ -43,3 +43,6 @@ yarn-error.log*
 
 # Sentry
 .sentryclirc
+
+# typechain
+/types/ethers-contracts

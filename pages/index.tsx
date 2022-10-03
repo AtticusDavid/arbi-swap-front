@@ -7,10 +7,10 @@ import { useQuery } from 'react-query';
 import { ArrowUpDownIcon, RepeatIcon } from '@chakra-ui/icons';
 import { Box, Divider, Flex, Heading, HStack, Button, IconButton, Tab, Tabs, TabList, useToast } from '@chakra-ui/react';
 import Decimal from 'decimal.js';
+import { BigNumber, ethers } from 'ethers';
 import { useAtom, useAtomValue } from 'jotai';
 import { useAtomCallback, useHydrateAtoms } from 'jotai/utils';
 import { DefaultSeo } from 'next-seo';
-import Web3 from 'web3';
 
 import { fetchQuote } from 'src/api/quote';
 import SlippageInput from 'src/components/SlippageInput';
@@ -34,6 +34,7 @@ import { useWallet } from 'src/hooks/useWallet';
 import { QuoteResponseDto } from 'src/types';
 import { logger } from 'src/utils/logger';
 import withComma from 'src/utils/with-comma';
+import { IERC20__factory } from 'types/ethers-contracts/factories';
 
 import seoConfig from '../next-seo.config';
 import styles from './Swap.module.scss';
@@ -253,69 +254,42 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
             colorScheme="primary"
             onClick={async () => {
               logger.debug(data?.metamaskSwapTransaction)
-              if (!data?.metamaskSwapTransaction || !address) return;
+              if (!data?.metamaskSwapTransaction || !address || !tokenInAddress) return;
               const { gasLimit, ...rest } = data.metamaskSwapTransaction;
 
-              const web3 = new Web3('https://evmos-mainnet.blastapi.io/d250cf48-5dac-48a1-a45c-8669fbc72a75');
-              const allowanceData = web3.eth.abi.encodeFunctionCall({
-                name: 'allowance',
-                type: 'function',
-                inputs: [{
-                  type: 'address',
-                  name: 'owner'
-                }, {
-                  type: 'address',
-                  name: 'spender'
-                }]
-              }, [address, '0xdf7ba1982ff003a80A74CdC0eEf246bc2a3E5F32']);
+              const provider = new ethers.providers.Web3Provider(window.ethereum as unknown as ethers.providers.ExternalProvider);
+              const signer = provider.getSigner();
 
-              const allowanceResponse = await web3.eth.call({
-                to: tokenInAddress,
-                data: allowanceData,
-              })
+              if (tokenInAddress !== "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee") {
+                const erc20 = IERC20__factory.connect(tokenInAddress, signer);
+                const allowance = await erc20.allowance(address, '0xdf7ba1982ff003a80A74CdC0eEf246bc2a3E5F32');
 
-              if (allowanceResponse === '0x0000000000000000000000000000000000000000000000000000000000000000') {
-                const approveData = web3.eth.abi.encodeFunctionCall({
-                  name: 'approve',
-                  type: 'function',
-                  inputs: [{
-                    type: 'address',
-                    name: 'spender'
-                  }, {
-                    type: 'uint256',
-                    name: 'amount'
-                  }]
-                }, ['0xdf7ba1982ff003a80A74CdC0eEf246bc2a3E5F32', '115792089237316195423570985008687907853269984665640564039457584007913129639935']);
+                if (allowance.eq(0)) {
+                  try {
+                    const tx = await erc20.approve('0xdf7ba1982ff003a80A74CdC0eEf246bc2a3E5F32', ethers.constants.MaxUint256);
+                    const receipt = await tx.wait();
 
-                try {
-                  const txHash = await window.ethereum.request({
-                    method: "eth_sendTransaction",
-                    params: [{
-                      from: address,
-                      to: tokenInAddress,
-                      value: '0x00',
-                      data: approveData,
-                      chainId: 9001,
-                    }],
-                  });
-                }
-                catch (e) {
-                  toast({
-                    title: 'Failed to send transaction',
-                    description: 'Need to approve first!',
-                    status: 'error',
-                    position: 'top-right',
-                    duration: 5000,
-                    isClosable: true,
-                  });
-                  return;
+                    if (receipt.status !== 1) {
+                      throw new Error("Approve failed");
+                    }
+                  } catch (e) {
+                    toast({
+                      title: 'Failed to send transaction',
+                      description: 'Need to approve first!',
+                      status: 'error',
+                      position: 'top-right',
+                      duration: 5000,
+                      isClosable: true,
+                    });
+                    return;
+                  }
                 }
               }
 
               try {
                 const txHash = await sendTransaction({
                   ...rest,
-                  value: web3.utils.toHex(rest.value),
+                  value: BigNumber.from(rest.value).toHexString(),
                 });
 
                 if (!txHash) throw new Error('invalid transaction!')
