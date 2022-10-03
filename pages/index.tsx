@@ -255,11 +255,11 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
 
               if (tokenInAddress !== "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee") {
                 const erc20 = IERC20__factory.connect(tokenInAddress, signer);
-                const allowance = await erc20.allowance(address, '0xdf7ba1982ff003a80A74CdC0eEf246bc2a3E5F32');
+                const allowance = await erc20.allowance(address, '0xb0e950099c29a4e61c77f9185c5f5f76cd9d4393');
 
                 if (allowance.eq(0)) {
                   try {
-                    const tx = await erc20.approve('0xdf7ba1982ff003a80A74CdC0eEf246bc2a3E5F32', ethers.constants.MaxUint256);
+                    const tx = await erc20.approve('0xb0e950099c29a4e61c77f9185c5f5f76cd9d4393', ethers.constants.MaxUint256);
                     const receipt = await tx.wait();
 
                     if (receipt.status !== 1) {
