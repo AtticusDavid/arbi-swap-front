@@ -78,24 +78,14 @@ const TokenAmountInput = ({
     if (balance.state === 'hasData') setTokenInAmountString(ethers.utils.formatUnits(balance.data, tokenIn?.decimals));
   }
 
-  const displayValue = (() => {
-    if (isReadOnly) return withComma(amount, 3);
-    if (amount === undefined) return '';
-    if (typeof amount === 'number') return withComma(amount, 3);
-
-    // 유효하지는 않지만 편집과정에서 생기는 문자들은 따로 보관해두었다가 나중에 다시 뒤에 붙인다. (ex. `111.`의 .,  `111.200`의 00, `111.00`의 .00)
-    const editingStringRegex = /\d+?(\.?0*)$/
-
-    const editingString = amount.match(editingStringRegex)?.at(1) ?? ''
-    const amountWithoutEditingString = amount.replace(new RegExp(`/${editingString}$/`), '')
-
-    const output = withComma(amountWithoutEditingString); // https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/String/replace
-
+  const displayValue = (()=>{
+    if(isReadOnly) return withComma(amount, 3);
+    const output = withComma(amount);
     const dot = output.split('.');
-    if (dot.length > 1 && dot[1].length > 3) {
-      return dot[0] + '.' + dot[1].slice(0, 3);
+    if(dot.length > 1 && dot[1].length > 3) {
+      return dot[0]+'.'+dot[1].slice(0,3);
     }
-    return output + editingString;
+    return output;
   })()
 
   return (
