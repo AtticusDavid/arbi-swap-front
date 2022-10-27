@@ -16,27 +16,36 @@ function withComma(value?: number | string, fixNumber?: number): string {
   if (value === undefined || value === '') return '';
   if (typeof value === 'number' && isNaN(value)) return '';
 
-  // 유효하지는 않지만 편집과정에서 생기는 문자들은 따로 보관해두었다가 나중에 다시 뒤에 붙인다. (ex. `111.`의 .,  `111.200`의 00, `111.00`의 .00)
-  const editingString = (typeof value === 'string'  && value !== '0') ? value.match(/\d*?(\.?0*)$/)?.at(1) ?? '': ''
 
   try {
     if (value === undefined || value === '') return '';
     if (typeof value === 'number' && isNaN(value)) return '';
 
-    const input = typeof value === 'string' ? removeDotExceptFirstOne(filterDecimal(value)) : value
-    const decimal = new Decimal(input);
-    // 0보다 작은 경우 유효숫자의 개수가 fixNumber만큼 노출되도록 수정
+    const input = typeof value === 'string' ? removeDotExceptFirstOne(filterDecimal(value)) : value.toString()
+    const hasDot = input.includes('.');
 
-    const fixed = fixNumber === undefined ? undefined : (fixNumber && decimal.e < 0) ? fixNumber + Math.min(0, -decimal.e - 1) : fixNumber;
+    const intergerPart = input.split('.')[0]
+    const fractionPart = hasDot ? input.split('.')[1] : ''
+
+    const decimal = new Decimal(input);
+
+    // 0보다 작은 경우 유효숫자의 개수가 fixNumber만큼 노출되도록 수정
+    // 대신, 유효숫자의 갯수가 소수부의 길이보다 크면, 소수부의 최대 길이만큼 노출
+    // ex) expect(withComma('0.123', 5)).notToBe('0.12300').toBe('0.123')
+    const fixed = (() => {
+      if (fixNumber === undefined) return undefined;
+      if (fixNumber && decimal.e < 0) return Math.min(fixNumber - decimal.e - 1, fractionPart.length + 2); // 소수 자리에 '.', '0' 두 글자가 더 들어가야 하므로.. +2
+      return Math.min(fixNumber, fractionPart.length);
+    })()
+
     // 정수부
     const intPart = +new Decimal(decimal).trunc();
     // 소수부
-    const decimalPart = new Decimal(decimal).sub(intPart).toFixed(fixed);
+    const fixedFractionPart = new Decimal(`0.${fractionPart}`).toFixed(fixed);
 
-    // console.log({intPart, decimalPart, fixed, fixNumber, exp: decimal.e})
-    const result = Number(intPart).toLocaleString() + decimalPart.slice(1)
+    const result = Number(intPart).toLocaleString() + (hasDot ? fixedFractionPart.slice(1) : '')
 
-    return result + editingString;
+    return result;
   }
   catch (e) {
     return ''

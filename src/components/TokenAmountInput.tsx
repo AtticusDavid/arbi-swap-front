@@ -78,13 +78,13 @@ const TokenAmountInput = ({
     if (balance.state === 'hasData') setTokenInAmountString(ethers.utils.formatUnits(balance.data, tokenIn?.decimals));
   }
 
-  const displayValue = (()=>{
-    if(isReadOnly) return withComma(amount, 3);
+  const displayValue = (() => {
+    if (isReadOnly) return withComma(amount, 3);
     const output = withComma(amount);
-    const dot = output.split('.');
-    if(dot.length > 1 && dot[1].length > 3) {
-      return dot[0]+'.'+dot[1].slice(0,3);
-    }
+    // const dot = output.split('.');
+    // if(dot.length > 1 && dot[1].length > 3) {
+    // return dot[0]+'.'+dot[1].slice(0,3);
+    // }
     return output;
   })()
 
