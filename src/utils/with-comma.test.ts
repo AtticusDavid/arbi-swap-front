@@ -24,3 +24,10 @@ test('유효자리수가 잘 작동하는 가', () => {
     expect(withComma('123', 3)).toBe('123')
     expect(withComma('1234.154', 5)).toBe('1,234.154')
 })
+
+test('편집 중에도 잘 작동하는 가', () => {
+    expect(withComma('112.')).toBe('112.')
+    expect(withComma('112.0', 3)).toBe('112.0')
+    expect(withComma('112.00')).toBe('112.00')
+    expect(withComma('112.0')).toBe('112.0')
+})

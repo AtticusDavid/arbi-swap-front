@@ -24,7 +24,6 @@ function withComma(value?: number | string, fixNumber?: number): string {
     const input = typeof value === 'string' ? removeDotExceptFirstOne(filterDecimal(value)) : value.toString()
     const hasDot = input.includes('.');
 
-    const intergerPart = input.split('.')[0]
     const fractionPart = hasDot ? input.split('.')[1] : ''
 
     const decimal = new Decimal(input);
@@ -41,8 +40,9 @@ function withComma(value?: number | string, fixNumber?: number): string {
     // 정수부
     const intPart = +new Decimal(decimal).trunc();
     // 소수부
-    const fixedFractionPart = new Decimal(`0.${fractionPart}`).toFixed(fixed);
+    const fixedFractionPart = fixed ? new Decimal(`0.${fractionPart}`).toFixed(fixed) : `0.${fractionPart}`;
 
+    // console.log({ input, intPart, fixed, fixedFractionPart, decimal, e: decimal.e, hasDot })
     const result = Number(intPart).toLocaleString() + (hasDot ? fixedFractionPart.slice(1) : '')
 
     return result;
