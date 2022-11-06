@@ -1,32 +1,11 @@
 {
-    "result": [
-    {
-      "name": "Wrapped Evmos",
-      "symbol": "WEVMOS",
-      "decimals": 18,
-      "address": "0xd4949664cd82660aae99bedc034a0dea8a0bd517",
-      "logoURI": "https://static.eisenfinance.com/tokens/evmos/0xd4949664cd82660aae99bedc034a0dea8a0bd517.png"
-    },
-    {
-      "address": "0xfa3c22c069b9556a4b2f7ece1ee3b467909f4864",
-      "decimals": 6,
-      "symbol": "OSMO",
-      "name": "Osmosis",
-      "logoURI": "https://static.eisenfinance.com/tokens/evmos/0xfa3c22c069b9556a4b2f7ece1ee3b467909f4864.png"
-    },
+  "result": [
     {
       "name": "Evmos",
       "symbol": "EVMOS",
       "decimals": 18,
       "address": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
       "logoURI": "https://static.eisenfinance.com/tokens/evmos/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png"
-    },
-    {
-      "address": "0xc5e00d3b04563950941f7137b5afa3a534f0d6d6",
-      "decimals": 6,
-      "symbol": "ATOM",
-      "name": "Cosmos Hub",
-      "logoURI": "https://static.eisenfinance.com/tokens/evmos/0xc5e00d3b04563950941f7137b5afa3a534f0d6d6.png"
     },
     {
       "address": "0x3f75ceabcdfed1aca03257dc6bdc0408e2b4b026",
@@ -41,6 +20,27 @@
       "symbol": "xDIFF",
       "name": "xDiffusion",
       "logoURI": "https://static.eisenfinance.com/tokens/evmos/0x75aee82a16bd1fb98b11879af93ab7ce055f66da.png"
+    },
+    {
+      "address": "0xfa3c22c069b9556a4b2f7ece1ee3b467909f4864",
+      "decimals": 6,
+      "symbol": "OSMO",
+      "name": "Osmosis",
+      "logoURI": "https://static.eisenfinance.com/tokens/evmos/0xfa3c22c069b9556a4b2f7ece1ee3b467909f4864.png"
+    },
+    {
+      "name": "Wrapped Evmos",
+      "symbol": "WEVMOS",
+      "decimals": 18,
+      "address": "0xd4949664cd82660aae99bedc034a0dea8a0bd517",
+      "logoURI": "https://static.eisenfinance.com/tokens/evmos/0xd4949664cd82660aae99bedc034a0dea8a0bd517.png"
+    },
+    {
+      "address": "0xc5e00d3b04563950941f7137b5afa3a534f0d6d6",
+      "decimals": 6,
+      "symbol": "ATOM",
+      "name": "Cosmos Hub",
+      "logoURI": "https://static.eisenfinance.com/tokens/evmos/0xc5e00d3b04563950941f7137b5afa3a534f0d6d6.png"
     },
     {
       "address": "0x80b5a32e4f032b2a058b4f29ec95eefeeb87adcd",
@@ -87,14 +87,14 @@
     {
       "address": "0x51e44ffad5c2b122c8b635671fcc8139dc636e82",
       "decimals": 6,
-      "symbol": "USDC",
+      "symbol": "madUSDC",
       "name": "USD Coin",
       "logoURI": "https://static.eisenfinance.com/tokens/evmos/0x51e44ffad5c2b122c8b635671fcc8139dc636e82.png"
     },
     {
       "address": "0x7ff4a56b32ee13d7d4d405887e0ea37d61ed919e",
       "decimals": 6,
-      "symbol": "USDT",
+      "symbol": "madUSDT",
       "name": "Tether USD",
       "logoURI": "https://static.eisenfinance.com/tokens/evmos/0x7ff4a56b32ee13d7d4d405887e0ea37d61ed919e.png"
     },

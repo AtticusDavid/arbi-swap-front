@@ -16,12 +16,17 @@ import {
   FormErrorMessage,
   HStack,
 } from '@chakra-ui/react';
-import { PrimitiveAtom, useAtom, useAtomValue } from 'jotai';
+import { ethers } from 'ethers';
+import { PrimitiveAtom, useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { loadable } from 'jotai/utils';
 
 import { tokenListAtom } from 'src/domain/chain/atom';
 import { Token } from 'src/domain/chain/types';
 import {
+  balanceAtom,
   tokenInAddressAtom,
+  tokenInAmountStringAtom,
+  tokenInAtom,
   tokenOutAddressAtom,
   useCurrency,
 } from 'src/domain/swap/atom';
@@ -37,6 +42,7 @@ interface Props {
   modalHeaderTitle: string;
   label: string;
   isInvalid?: boolean;
+  showBalance?: boolean;
 }
 
 const BASE_URL = 'https://static.eisenfinance.com/tokens';
@@ -49,6 +55,7 @@ const TokenAmountInput = ({
   label,
   isReadOnly,
   isInvalid,
+  showBalance,
 }: Props) => {
   const { isOpen, onClose, onOpen } = useDisclosure();
   const { currency, getPriceInCurrency } = useCurrency();
@@ -56,14 +63,30 @@ const TokenAmountInput = ({
   const tokenList = useAtomValue(tokenListAtom);
   const [selectedTokenAddress, setSelectedTokenAddress] = useAtom(tokenAddressAtom);
   const selectedToken = tokenList.find(x => x.address === selectedTokenAddress);
-
+  const balance = useAtomValue(loadable(balanceAtom));
   const tokenInAddress = useAtomValue(tokenInAddressAtom);
+  const tokenIn = useAtomValue(tokenInAtom);
   const tokenOutAddress = useAtomValue(tokenOutAddressAtom);
 
   const filteredTokenList = tokenList.filter(({ address }) => address !== tokenInAddress && address !== tokenOutAddress);
 
   const tokenPriceInCurrency = selectedTokenAddress ? getPriceInCurrency(selectedTokenAddress) : undefined;
   const priceInCurrency = tokenPriceInCurrency ? withComma(tokenPriceInCurrency * Number(amount), 2) : undefined;
+  const setTokenInAmountString = useSetAtom(tokenInAmountStringAtom);
+
+  const fillInputWithBalance = () => {
+    if (balance.state === 'hasData') setTokenInAmountString(ethers.utils.formatUnits(balance.data, tokenIn?.decimals));
+  }
+
+  const displayValue = (() => {
+    if (isReadOnly) return withComma(amount, 3);
+    const output = withComma(amount);
+    // const dot = output.split('.');
+    // if(dot.length > 1 && dot[1].length > 3) {
+    // return dot[0]+'.'+dot[1].slice(0,3);
+    // }
+    return output;
+  })()
 
   return (
     <>
@@ -76,7 +99,14 @@ const TokenAmountInput = ({
       />
 
       <Heading as="h3" size="md">
-        {label}
+        <HStack justifyContent={showBalance ? "space-between" : "flex-start"}>
+          <Text>
+            {label}
+          </Text>
+          {showBalance &&
+            <Button size="sm" onClick={fillInputWithBalance}>max</Button>
+          }
+        </HStack>
       </Heading>
       <Stack
         marginTop={4}
@@ -106,19 +136,19 @@ const TokenAmountInput = ({
         <FormControl isInvalid={isInvalid}>
           <InputGroup size="lg" minWidth="160px">
             <Input
-              value={withComma(amount, isReadOnly ? 3 : 0)}
+              value={displayValue}
               onChange={handleChange}
               isReadOnly={isReadOnly}
               readOnly={isReadOnly}
               id="amount"
               // type="number"
               placeholder="0"
-              inputMode="numeric"
+              // inputMode="numeric"
               maxLength={29}
               focusBorderColor="secondary.200"
               onWheel={e => (e.target as HTMLInputElement).blur()}
             />
-            <InputRightElement marginRight={4}>
+            <InputRightElement paddingRight={4} backgroundColor="blueGray">
               <Box paddingX={4}>
                 <Text textAlign="center" fontSize={['sm', 'md', 'md', 'md']}>
                   {selectedToken?.symbol}
@@ -134,11 +164,22 @@ const TokenAmountInput = ({
         </FormControl>
       </Stack>
       <Box h={1} />
-      {priceInCurrency !== 'NaN' && priceInCurrency !== 'Infinity' && priceInCurrency &&
-        <HStack justifyContent="flex-end">
-          <Text color="blueGray.200">
-            {priceInCurrency} {currency.toUpperCase()}
-          </Text>
+      {priceInCurrency !== 'NaN' && priceInCurrency !== 'Infinity' &&
+        <HStack justifyContent={showBalance ? 'space-between' : 'flex-end'}>
+          {showBalance &&
+
+            <Text color="blueGray.200" onClick={() => {
+              fillInputWithBalance();
+              if (balance.state === 'hasData') setTokenInAmountString(ethers.utils.formatUnits(balance.data, tokenIn?.decimals));
+            }}>
+              Balance: {balance.state === 'hasData' ? withComma(ethers.utils.formatUnits(balance.data, tokenIn?.decimals), 3) : '0'}
+            </Text>
+          }
+          {priceInCurrency &&
+            <Text color="blueGray.200">
+              {priceInCurrency} {currency.toUpperCase()}
+            </Text>
+          }
         </HStack>
       }
     </>

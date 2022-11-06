@@ -56,7 +56,7 @@ const SwapPreviewResult = ({
   const { getPriceInUSDC } = useCurrency();
 
   const priceImpact = tokenInAmount && tokenOut && tokenIn && getPriceInUSDC(tokenOut.address) && getPriceInUSDC(tokenIn.address) && calculatePriceImpact({
-    inputTokenAmount: tokenInAmount,
+    inputTokenAmount: Number(tokenInAmount),
     inputTokenPriceInUSDT: getPriceInUSDC(tokenIn.address)!,
     outputTokenPriceInUSDT: getPriceInUSDC(tokenOut.address)!,
     outputTokenAmountBeforeFeeDeducted: expectedOutputAmount,
@@ -86,7 +86,7 @@ const SwapPreviewResult = ({
             startColor="blueGray.200"
             endColor="blueGray.400">
             <Text fontSize={['sm', 'md', 'md', 'md']} color={priceImpact && priceImpact > 5 ? 'red' : undefined}>
-              {priceImpact && priceImpact > 1 ? withComma(priceImpact, 1) : '< 1'}
+              {priceImpact && priceImpact > 1 && isFinite(priceImpact) ? withComma(priceImpact, 1) : '< 1'}
               %
             </Text>
           </SkeletonText>

@@ -67,7 +67,7 @@ const NavigationBar = () => {
           <>
             <Flex alignItems="center" padding={4}>
               <Heading as="h1" size="xl">
-                {ServiceName}
+                <img src='/arbi-nav-logo.png'></img>
               </Heading>
               <Spacer />
               <IconButton
@@ -140,7 +140,10 @@ const NavigationBar = () => {
           <Grid h={24} templateColumns="repeat(12, 1fr)" gap={6} alignItems="center" px={12}>
             <GridItem colStart={1} colEnd={4}>
               <Heading as="h1" size="xl">
-                {ServiceName}
+
+                <img src='/arbi-nav-logo.png'></img>
+              {/* </Heading> */}
+              <Spacer />
               </Heading>
             </GridItem>
 

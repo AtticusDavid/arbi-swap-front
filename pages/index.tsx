@@ -7,9 +7,11 @@ import { useQuery } from 'react-query';
 import { ArrowUpDownIcon, RepeatIcon } from '@chakra-ui/icons';
 import { Box, Divider, Flex, Heading, HStack, Button, IconButton, Tab, Tabs, TabList, useToast } from '@chakra-ui/react';
 import Decimal from 'decimal.js';
-import { useAtom, useAtomValue } from 'jotai';
+import { BigNumber, ethers } from 'ethers';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useAtomCallback, useHydrateAtoms } from 'jotai/utils';
 import { DefaultSeo } from 'next-seo';
+
 
 import { fetchQuote } from 'src/api/quote';
 import SlippageInput from 'src/components/SlippageInput';
@@ -19,11 +21,13 @@ import { keyMap } from 'src/constant/storage-key';
 import { defaultTokenList } from 'src/domain/chain/atom';
 import { Token } from 'src/domain/chain/types';
 import {
+  balanceFetchKey,
   getTokenOutDenomAtom,
   pageModeAtom,
   slippageRatioAtom,
   tokenInAddressAtom,
   tokenInAmountAtom,
+  tokenInAmountStringAtom,
   tokenInAtom,
   tokenOutAddressAtom,
   tokenOutAtom,
@@ -32,7 +36,8 @@ import { useDebounce } from 'src/hooks/useDebounce';
 import { useWallet } from 'src/hooks/useWallet';
 import { QuoteResponseDto } from 'src/types';
 import { logger } from 'src/utils/logger';
-import withComma from 'src/utils/with-comma';
+import { removeDotExceptFirstOne } from 'src/utils/with-comma';
+import { IERC20__factory } from 'types/ethers-contracts/factories';
 
 import seoConfig from '../next-seo.config';
 import styles from './Swap.module.scss';
@@ -49,35 +54,36 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
     [tokenOutAddressAtom, defaultTokenList[1].address] as const,
   ]);
 
+
   const tokenInAddress = useAtomValue(tokenInAddressAtom);
+ 
   const { address, sendTransaction } = useWallet();
   const toast = useToast();
 
   const selectedTokenIn = useAtomValue(tokenInAtom);
   const selectedTokenOut = useAtomValue(tokenOutAtom);
 
-  const [tokenInAmount, setTokenInAmount] = useAtom(tokenInAmountAtom);
+  const [tokenInAmountString, setTokenInAmountString] = useAtom(tokenInAmountStringAtom);
+  const tokenInAmount = useAtomValue(tokenInAmountAtom);
+
 
   const [pageMode, setPageMode] = useAtom(pageModeAtom);
 
   const debouncedTokenInAmount = useDebounce(tokenInAmount, 200);
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
-    // remove every charactor except dot and digits from e.target.value
-    const value = e.target.value.replace(/[^\d\.]/g, '');
-    const [integer, fraction] = value.split('.');
+    const value = e.target.value;
+    const [integer] = value.split('.');
     if (integer && integer.length > 10) {
       return;
     }
-    if (fraction && fraction.length > 5) {
-      return;
-    }
-    setTokenInAmount(value ? parseFloat(value) : undefined);
+    setTokenInAmountString(removeDotExceptFirstOne(value));
   };
 
   const [slippageRatio, setSlippageRatio] = useAtom(slippageRatioAtom);
 
   const getTokenOutDenom = useAtomValue(getTokenOutDenomAtom);
+  const updateFetchKey = useSetAtom(balanceFetchKey);
 
   const [previewResult, setPreviewResult] = useState<Omit<
     QuoteResponseDto,
@@ -97,16 +103,16 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
           tokenInAddr: selectedTokenIn.address,
           tokenOutAddr: selectedTokenOut.address,
           from: address!,
-          amount: new Decimal((tokenInAmount * Math.pow(10, selectedTokenIn?.decimals)).toString()).toFixed(),
+          amount: new Decimal(tokenInAmount).mul(Math.pow(10, selectedTokenIn?.decimals)).toFixed(),
           slippageBps: slippageRatio * 100,
           /**
            * constant
            */
-          maxEdge: 5,
+          maxEdge: 4,
           /**
            * constant
            */
-          maxSplit: 20,
+          maxSplit: 10,
           withCycle: pageMode === 'flash',
         }
         : undefined,
@@ -127,7 +133,7 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
 
       set(tokenInAddressAtom, tokenOutAddress);
       set(tokenOutAddressAtom, tokenInAddress);
-      set(tokenInAmountAtom, 0);
+      set(tokenInAmountStringAtom, '0');
     }, []),
   );
 
@@ -201,11 +207,12 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
 
           <TokenAmountInput
             tokenAddressAtom={tokenInAddressAtom}
-            amount={tokenInAmount}
+            amount={tokenInAmountString}
             handleChange={handleChange}
             modalHeaderTitle="You Sell"
             label="You Sell"
             isInvalid={isError}
+            showBalance={!!address}
           />
 
           <Flex alignItems="center" marginY={8}>
@@ -221,7 +228,7 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
 
           <TokenAmountInput
             tokenAddressAtom={tokenOutAddressAtom}
-            amount={withComma(tokenOutAmount, 3)}
+            amount={tokenOutAmount}
             isReadOnly
             modalHeaderTitle="You Buy"
             label="You Buy"
@@ -234,7 +241,7 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
           <Box w="100%" h={12} />
 
           <Button
-            isDisabled={!address || !data?.metamaskSwapTransaction}
+            isDisabled={!address || !data?.metamaskSwapTransaction || pageMode === 'flash'}
             w="100%"
             size="lg"
             height={['48px', '54px', '54px', '64px']}
@@ -243,16 +250,47 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
             colorScheme="primary"
             onClick={async () => {
               logger.debug(data?.metamaskSwapTransaction)
-              if (!data?.metamaskSwapTransaction) return;
+              if (!data?.metamaskSwapTransaction || !address || !tokenInAddress) return;
               const { gasLimit, ...rest } = data.metamaskSwapTransaction;
+
+              const provider = new ethers.providers.Web3Provider(window.ethereum as unknown as ethers.providers.ExternalProvider);
+              const signer = provider.getSigner();
+
+              if (tokenInAddress !== "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee") {
+                const erc20 = IERC20__factory.connect(tokenInAddress, signer);
+                const allowance = await erc20.allowance(address, '0xb0e950099c29a4e61c77f9185c5f5f76cd9d4393');
+
+                if (allowance.eq(0)) {
+                  try {
+                    const tx = await erc20.approve('0xb0e950099c29a4e61c77f9185c5f5f76cd9d4393', ethers.constants.MaxUint256);
+                    const receipt = await tx.wait();
+
+                    if (receipt.status !== 1) {
+                      throw new Error("Approve failed");
+                    }
+                  } catch (e) {
+                    toast({
+                      title: 'Failed to send transaction',
+                      description: 'Need to approve first!',
+                      status: 'error',
+                      position: 'top-right',
+                      duration: 5000,
+                      isClosable: true,
+                    });
+                    return;
+                  }
+                }
+              }
 
               try {
                 const txHash = await sendTransaction({
                   ...rest,
-                  gas: gasLimit.toString(16)
-                })
+                  value: BigNumber.from(rest.value).toHexString(),
+                });
+
                 if (!txHash) throw new Error('invalid transaction!')
-                toast({
+
+                const toastId = toast({
                   title: "Success!",
                   description: `Your transaction has sent: ${txHash}`,
                   status: 'success',
@@ -260,6 +298,22 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
                   duration: 5000,
                   isClosable: true,
                 })
+
+                provider.getTransactionReceipt(txHash).then(receipt => {
+                  updateFetchKey(+new Date());
+                  if (receipt) { // success
+                    if(toastId) toast.close(toastId);
+                    toast({
+                      title: "Success!",
+                      description: `Your transaction(${txHash}) is approved!`,
+                      status: 'success',
+                      position: 'top-right',
+                      duration: 5000,
+                      isClosable: true,
+                    })
+                  } else { // fail
+                  }
+                });
                 logger.debug('txhash', txHash)
               }
               catch (e) {
@@ -281,7 +335,7 @@ const Swap = ({ defaultTokenList }: InferGetServerSidePropsType<typeof getServer
         {previewResult && debouncedTokenInAmount ? (
           <SwapPreviewResult
             previewResult={previewResult}
-            expectedInputAmount={debouncedTokenInAmount}
+            expectedInputAmount={Number(debouncedTokenInAmount)}
             expectedOutputAmount={tokenOutAmount}
             isLoaded={!isLoading && !isRefetching}
           />

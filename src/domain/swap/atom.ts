@@ -1,17 +1,55 @@
-import { atom, useAtomValue } from 'jotai';
+import { BigNumber, ethers } from 'ethers';
+import { Atom, atom, useAtomValue } from 'jotai';
 import { atomWithQuery } from 'jotai/query'
-import { loadable } from 'jotai/utils';
+import { atomFamily, loadable } from 'jotai/utils';
 
 import { FetchBalanceResponseDto } from 'src/api/token';
 import axiosInstance from 'src/config/axios';
 import { wallStateAtom } from 'src/hooks/useWallet';
+import { filterDecimal, removeDotExceptFirstOne } from 'src/utils/with-comma';
+import { IERC20__factory } from 'types/ethers-contracts';
 
 import { tokenListAtom } from '../chain/atom';
 import { Token } from '../chain/types';
 
-
 export const pageModeAtom = atom<'swap' | 'flash'>('swap');
 export const tokenInAddressAtom = atom<string | undefined>(undefined);
+
+export const balanceFetchKey = atom<number>(0);
+export const balanceAtom = atomWithQuery(get => ({
+  queryKey: ['balance', get(tokenInAddressAtom), get(balanceFetchKey)],
+  queryFn: async ({ queryKey }) => {
+    const [_, tokenInAddress] = queryKey;
+
+    if (!tokenInAddress) {
+      return BigNumber.from(0);
+    }
+    return getBalanceFromAddress(tokenInAddress as string);
+  }
+}))
+
+
+export async function getBalanceFromAddress(tokenAddress: string) {
+
+  try {
+    const provider = new ethers.providers.Web3Provider(window.ethereum as unknown as ethers.providers.ExternalProvider);
+    const signer = provider.getSigner();
+    const address = await signer.getAddress();
+
+    if (tokenAddress === '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee') {
+      return provider.getBalance(address);
+    }
+
+    const erc20 = IERC20__factory.connect(tokenAddress as string, signer);
+    return await erc20.balanceOf(address);
+  }
+  catch (e) {
+    return BigNumber.from(0);
+  }
+
+}
+
+export const balanceAtomFamily = atomFamily<string, Atom<string | 'need approve' | null>>(() => atom(null));
 
 export const targetCurrencyAtom = atom<'krw' | 'usd'>('usd');
 
@@ -89,7 +127,13 @@ export const getTokenOutDenomAtom = atom<(amount: string) => number>(
   }
 )
 
-export const tokenInAmountAtom = atom<number | undefined>(undefined);
+export const tokenInAmountStringAtom = atom<string>('');
+
+export const tokenInAmountAtom = atom<number>(
+  (get) => {
+    return parseFloat(removeDotExceptFirstOne(filterDecimal(get(tokenInAmountStringAtom))));
+  }
+)
 
 export const slippageRatioAtom = atom<number>(1);
 
@@ -112,7 +156,7 @@ export const useCurrency = () => {
   const evmosAddress = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
 
   const getPriceInUSDC = (tokenAddr: string) => {
-    return tokenPriceList && (tokenPriceList.find(x => tokenAddr === wrappedEvmosAddress? x.tokenAddress === evmosAddress : x.tokenAddress === tokenAddr)?.priceUsdc ?? 0)
+    return tokenPriceList && (tokenPriceList.find(x => tokenAddr === wrappedEvmosAddress ? x.tokenAddress === evmosAddress : x.tokenAddress === tokenAddr)?.priceUsdc ?? 0)
   }
 
   const getPriceInCurrency = (tokenAddr: string) => {
